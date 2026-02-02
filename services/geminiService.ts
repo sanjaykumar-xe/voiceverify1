@@ -27,8 +27,12 @@ const fileToGenerativePart = async (file: File) => {
 
 export const analyzeAudio = async (audioFile: File): Promise<DetectionResult> => {
   try {
-    /* Initialize GoogleGenAI directly with process.env.API_KEY inside the function */
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    /* Initialize GoogleGenAI with GEMINI_API_KEY for consistency */
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error('Gemini API key not found in environment variables');
+    }
+    const ai = new GoogleGenAI({ apiKey });
     const audioPart = await fileToGenerativePart(audioFile);
     
     const prompt = `
@@ -48,9 +52,9 @@ export const analyzeAudio = async (audioFile: File): Promise<DetectionResult> =>
       Response must be in the specified JSON format.
     `;
 
-    /* Updated to gemini-3-flash-preview for a faster, more cost-effective model suitable for the free tier. */
+    /* Updated to gemini-1.5-flash for better performance and reliability */
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: { parts: [{ text: prompt }, audioPart] },
       config: {
         responseMimeType: 'application/json',
